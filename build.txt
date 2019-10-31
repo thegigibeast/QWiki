@@ -1,0 +1,3 @@
+displayName = QWiki
+author = thegigibeast
+version = 0.1
