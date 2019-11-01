@@ -10,5 +10,9 @@ namespace QWiki
         [DefaultValue(true)]
         [Label("Use steam overlay")]
         public bool UseSteamOverlay;
+
+        [DefaultValue(true)]
+        [Label("Use active game culture")]
+        public bool UseActiveGameCulture;
     }
 }

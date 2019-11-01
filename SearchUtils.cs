@@ -1,14 +1,24 @@
 ﻿using Steamworks;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using Terraria;
+using Terraria.Localization;
+using Terraria.ModLoader;
 using static Terraria.ModLoader.ModContent;
 
 namespace QWiki
 {
     public static class SearchUtils
     {
-        public const string TERRARIA_WIKI = "http://terraria.gamepedia.com/index.php?search=%s";
+        public static GameCulture DEFAULT_GAME_CULTURE = GameCulture.English;
+        public static Dictionary<GameCulture, string> TERRARIA_WIKI = new Dictionary<GameCulture, string>()
+        {
+            { GameCulture.Chinese, "http://terraria-zh.gamepedia.com/index.php?search=%s" },
+            { GameCulture.English, "http://terraria.gamepedia.com/index.php?search=%s" },
+            { GameCulture.French, "http://terraria-fr.gamepedia.com/index.php?search=%s" }
+        };
 
         /// <summary>
         /// Begin searching for something under the mouse cursor.
@@ -41,16 +51,43 @@ namespace QWiki
                         // Checks if the mod is registered
                         if (QWiki.registeredMods.ContainsKey(mod))
                         {
-                            DoSearch(QWiki.registeredMods[mod], itemName);
+                            // Check to see if we can use the active culture and if the mod has a search URL registered for this culture
+                            if (GetInstance<ClientConfig>().UseActiveGameCulture && QWiki.registeredMods[mod].ContainsKey(LanguageManager.Instance.ActiveCulture))
+                            {
+                                DoSearch(QWiki.registeredMods[mod][LanguageManager.Instance.ActiveCulture], itemName);
+                            }
+                            else
+                            {
+                                ActionWithDefaultGameCulture(() =>
+                                {
+                                    // We get the item name again to get it in the default game culture
+                                    itemName = Main.HoverItem.Name;
+                                    itemName = Regex.Replace(itemName, @"\[.+\]", "").Trim();
+                                    DoSearch(QWiki.registeredMods[mod][DEFAULT_GAME_CULTURE], itemName);
+                                });
+                            }
                         }
                         else
                         {
-                            ShowModMessage("item", itemName, mod.DisplayName);
+                            ShowModMessage("item", itemName, mod);
                         }
                     }
                     else
                     {
-                        DoSearch(TERRARIA_WIKI, itemName);
+                        // Check if we can use the active culture
+                        if (GetInstance<ClientConfig>().UseActiveGameCulture)
+                        {
+                            DoSearch(TERRARIA_WIKI[LanguageManager.Instance.ActiveCulture], itemName);
+                        }
+                        else
+                        {
+                            ActionWithDefaultGameCulture(() =>
+                            {
+                                // We get the item name again to get it in the default game culture
+                                itemName = Main.HoverItem.Name;
+                                DoSearch(TERRARIA_WIKI[DEFAULT_GAME_CULTURE], itemName);
+                            });
+                        }
                     }
 
                     return true;
@@ -73,9 +110,20 @@ namespace QWiki
             }
         }
 
-        private static void ShowModMessage(string type, string name, string mod)
+        private static void ShowModMessage(string type, string name, Mod mod)
         {
-            Main.NewText($"Cannot search for {name}, because it is a modded {type} from {mod}.");
+            Main.NewText($"Cannot search for {name}, because it is a modded {type} from {mod.DisplayName}.");
+        }
+
+        /// <summary>
+        /// Temporarily changes the game culture to the default game culture to execute an action.
+        /// </summary>
+        private static void ActionWithDefaultGameCulture(Action action)
+        {
+            var oldGameCulture = LanguageManager.Instance.ActiveCulture;
+            LanguageManager.Instance.SetLanguage(DEFAULT_GAME_CULTURE);
+            action();
+            LanguageManager.Instance.SetLanguage(oldGameCulture);
         }
     }
 }
