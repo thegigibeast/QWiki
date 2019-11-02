@@ -42,7 +42,7 @@ namespace QWiki
         /// <returns>true if an item has been searched, false otherwise</returns>
         private static bool ItemHover()
         {
-            if (Main.playerInventory && !string.IsNullOrWhiteSpace(Main.HoverItem.Name))
+            if (!string.IsNullOrWhiteSpace(Main.HoverItem.Name))
             {
                 var itemName = string.Empty;
                 if (Main.HoverItem.modItem != null)

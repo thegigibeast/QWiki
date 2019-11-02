@@ -48,11 +48,25 @@ namespace QWiki
 
         public override void PostSetupContent()
         {
+            #region SacredTools
+            var sacredTools = ModLoader.GetMod("SacredTools");
+            if (sacredTools != null)
+            {
+                RegisterMod(sacredTools, "http://shadowsofabaddon.gamepedia.com/index.php?search=%s");
+            }
+            #endregion
             #region SpiritMod
             var spiritMod = ModLoader.GetMod("SpiritMod");
             if (spiritMod != null)
             {
                 RegisterMod(spiritMod, "http://spiritmod.gamepedia.com/index.php?search=%s");
+            }
+            #endregion
+            #region ThoriumMod
+            var thoriumMod = ModLoader.GetMod("ThoriumMod");
+            if (thoriumMod != null)
+            {
+                RegisterMod(thoriumMod, "https://thoriummod.gamepedia.com/index.php?search=%s");
             }
             #endregion
         }
