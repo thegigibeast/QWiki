@@ -16,15 +16,15 @@ namespace QWiki
 
         private static readonly Dictionary<GameCulture, string> TERRARIA_WIKI = new Dictionary<GameCulture, string>()
         {
-            { GameCulture.Chinese, "http://terraria-zh.gamepedia.com/index.php?search=%s" },
-            { GameCulture.English, "http://terraria.gamepedia.com/index.php?search=%s" },
-            { GameCulture.French, "http://terraria-fr.gamepedia.com/index.php?search=%s" },
-            { GameCulture.German, "http://terraria-de.gamepedia.com/index.php?search=%s" },
-            //{ GameCulture.Italian, "http://terraria-zh.gamepedia.com/index.php?search=%s" },
-            { GameCulture.Polish, "http://terraria-pl.gamepedia.com/index.php?search=%s" },
-            { GameCulture.Portuguese, "http://terraria-pt.gamepedia.com/index.php?search=%s" },
-            { GameCulture.Russian, "http://terraria-ru.gamepedia.com/index.php?search=%s" },
-            //{ GameCulture.Spanish, "http://terraria.fandom.com/es/wiki/Especial:Buscar?query=%s" }
+            { GameCulture.Chinese, "https://terraria-zh.gamepedia.com/index.php?search=%s" },
+            { GameCulture.English, "https://terraria.gamepedia.com/index.php?search=%s" },
+            { GameCulture.French, "https://terraria-fr.gamepedia.com/index.php?search=%s" },
+            { GameCulture.German, "https://terraria-de.gamepedia.com/index.php?search=%s" },
+            //{ GameCulture.Italian, "https://terraria-zh.gamepedia.com/index.php?search=%s" },
+            { GameCulture.Polish, "https://terraria-pl.gamepedia.com/index.php?search=%s" },
+            { GameCulture.Portuguese, "https://terraria-pt.gamepedia.com/index.php?search=%s" },
+            { GameCulture.Russian, "https://terraria-ru.gamepedia.com/index.php?search=%s" },
+            //{ GameCulture.Spanish, "https://terraria.fandom.com/es/wiki/Especial:Buscar?query=%s" }
         };
 
         /// <summary>

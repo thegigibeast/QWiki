@@ -52,14 +52,14 @@ namespace QWiki
             var sacredTools = ModLoader.GetMod("SacredTools");
             if (sacredTools != null)
             {
-                RegisterMod(sacredTools, "http://shadowsofabaddon.gamepedia.com/index.php?search=%s");
+                RegisterMod(sacredTools, "https://shadowsofabaddon.gamepedia.com/index.php?search=%s");
             }
             #endregion
             #region SpiritMod
             var spiritMod = ModLoader.GetMod("SpiritMod");
             if (spiritMod != null)
             {
-                RegisterMod(spiritMod, "http://spiritmod.gamepedia.com/index.php?search=%s");
+                RegisterMod(spiritMod, "https://spiritmod.gamepedia.com/index.php?search=%s");
             }
             #endregion
             #region ThoriumMod
