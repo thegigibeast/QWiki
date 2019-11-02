@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Terraria;
 using Terraria.Localization;
 using Terraria.ModLoader;
 
@@ -15,10 +14,6 @@ namespace QWiki
 
         public static Dictionary<Mod, Dictionary<GameCulture, string>> registeredMods;
 
-		public QWiki()
-		{
-		}
-
         public override object Call(params object[] args)
         {
             try
@@ -30,7 +25,10 @@ namespace QWiki
                         Logger.Error($"[{DateTime.Now}] {Name} Call Error: Unknown Message: {message}");
                         break;
                     case "RegisterMod":
-                        RegisterMod((Mod)args[1], (GameCulture)args[2], (string)args[3]);
+                        RegisterMod((Mod)args[1], (string)args[2]);
+                        break;
+                    case "RegisterGameCulture":
+                        RegisterGameCulture((Mod)args[1], (GameCulture)args[2], (string)args[3]);
                         break;
                 }
             }
@@ -54,7 +52,7 @@ namespace QWiki
             var spiritMod = ModLoader.GetMod("SpiritMod");
             if (spiritMod != null)
             {
-                RegisterMod(spiritMod, GameCulture.English, "http://spiritmod.gamepedia.com/index.php?search=%s");
+                RegisterMod(spiritMod, "http://spiritmod.gamepedia.com/index.php?search=%s");
             }
             #endregion
         }
@@ -73,27 +71,39 @@ namespace QWiki
             registeredMods = null;
         }
 
-        private void RegisterMod(Mod mod, GameCulture gameCulture, string searchUrl)
+        /// <summary>
+        /// Register a mod with default GameCulture.
+        /// </summary>
+        private void RegisterMod(Mod mod, string searchUrl)
         {
-            // Check to see if the mod parameter has a value
-            if (mod != null && !string.IsNullOrWhiteSpace(searchUrl))
+            // Create the entry if the mod has not already been registered
+            if (!registeredMods.ContainsKey(mod))
             {
-                // Check to see if the mod has already been registered
-                if (!registeredMods.ContainsKey(mod))
-                {
-                    registeredMods.Add(mod, new Dictionary<GameCulture, string>());
-                }
-
-                registeredMods[mod][gameCulture] = searchUrl;
-
-                // Check to see if we don't have a default culture entry for this mod
-                if (!registeredMods[mod].ContainsKey(SearchUtils.DEFAULT_GAME_CULTURE))
-                {
-                    registeredMods[mod][SearchUtils.DEFAULT_GAME_CULTURE] = searchUrl;
-                }
-
-                Logger.Info($"[{DateTime.Now}] {Name}: Successfully registered {mod.Name}");
+                registeredMods.Add(mod, new Dictionary<GameCulture, string>());
             }
+
+            // Set default GameCulture search url
+            registeredMods[mod][SearchUtils.DEFAULT_GAME_CULTURE] = searchUrl;
+
+            Logger.Info($"[{DateTime.Now}] {Name}: Successfully registered {mod.DisplayName} with default GameCulture ({SearchUtils.DEFAULT_GAME_CULTURE.Name})");
+        }
+
+        /// <summary>
+        /// Register a search URL for a specific GameCulture.
+        /// </summary>
+        private void RegisterGameCulture(Mod mod, GameCulture gameCulture, string searchUrl)
+        {
+            // Allow creating an entry only if the mod has been registered with the default GameCulture first
+            if (!registeredMods.ContainsKey(mod))
+            {
+                Logger.Error($"[{DateTime.Now}] {Name} Call Error: {mod.DisplayName} has not been registered with default game culture yet, please call the RegisterMod message first.");
+                return;
+            }
+
+            // Register an entry for this GameCulture
+            registeredMods[mod][gameCulture] = searchUrl;
+
+            Logger.Info($"[{DateTime.Now}] {Name}: Successfully registered {mod.DisplayName} with specific GameCulture ({gameCulture.Name})");
         }
     }
 }

@@ -12,16 +12,16 @@ namespace QWiki
 {
     public static class SearchUtils
     {
-        public static GameCulture DEFAULT_GAME_CULTURE = GameCulture.English;
-        public static Dictionary<GameCulture, string> TERRARIA_WIKI = new Dictionary<GameCulture, string>()
+        public static readonly GameCulture DEFAULT_GAME_CULTURE = GameCulture.English;
+
+        private static readonly Dictionary<GameCulture, string> TERRARIA_WIKI = new Dictionary<GameCulture, string>()
         {
-            { GameCulture.Chinese, "http://terraria-zh.gamepedia.com/index.php?search=%s" },
             { GameCulture.English, "http://terraria.gamepedia.com/index.php?search=%s" },
             { GameCulture.French, "http://terraria-fr.gamepedia.com/index.php?search=%s" }
         };
 
         /// <summary>
-        /// Begin searching for something under the mouse cursor.
+        /// Begins searching for something under the cursor.
         /// </summary>
         public static void SearchWiki()
         {
@@ -29,101 +29,87 @@ namespace QWiki
         }
 
         /// <summary>
-        /// Checks for an item under the mouse cursor.
+        /// Tries to search for an item under the cursor.
         /// </summary>
-        /// <returns>whether an item is under the mouse cursor</returns>
-        private static bool ItemHover()
+        /// <returns>true if the item has been searched, false otherwise</returns>
+        public static bool ItemHover()
         {
-            // Checks if the inventory is open
-            if (Main.playerInventory)
+            if (Main.playerInventory && !string.IsNullOrWhiteSpace(Main.HoverItem.Name))
             {
-                // Checks if the mouse is over an item
-                if (!string.IsNullOrWhiteSpace(Main.HoverItem.Name))
+                var itemName = string.Empty;
+                if (Main.HoverItem.modItem != null)
                 {
-                    var itemName = Main.HoverItem.Name;
-
-                    // Checks if the hovered item is a mod item
-                    if (Main.HoverItem.modItem != null)
+                    var mod = Main.HoverItem.modItem.mod;
+                    if (QWiki.registeredMods.ContainsKey(mod))
                     {
-                        var mod = Main.HoverItem.modItem.mod;
-                        itemName = Regex.Replace(itemName, @"\[.+\]", "").Trim();
-
-                        // Checks if the mod is registered
-                        if (QWiki.registeredMods.ContainsKey(mod))
+                        DoSearch(QWiki.registeredMods[mod], ref itemName, () =>
                         {
-                            // Check to see if we can use the active culture and if the mod has a search URL registered for this culture
-                            if (GetInstance<ClientConfig>().UseActiveGameCulture && QWiki.registeredMods[mod].ContainsKey(LanguageManager.Instance.ActiveCulture))
-                            {
-                                DoSearch(QWiki.registeredMods[mod][LanguageManager.Instance.ActiveCulture], itemName);
-                            }
-                            else
-                            {
-                                ActionWithDefaultGameCulture(() =>
-                                {
-                                    // We get the item name again to get it in the default game culture
-                                    itemName = Main.HoverItem.Name;
-                                    itemName = Regex.Replace(itemName, @"\[.+\]", "").Trim();
-                                    DoSearch(QWiki.registeredMods[mod][DEFAULT_GAME_CULTURE], itemName);
-                                });
-                            }
-                        }
-                        else
-                        {
-                            ShowModMessage("item", itemName, mod);
-                        }
+                            itemName = Regex.Replace(Main.HoverItem.Name, @"\[.+\]", "").Trim();
+                        });
                     }
                     else
                     {
-                        // Check if we can use the active culture
-                        if (GetInstance<ClientConfig>().UseActiveGameCulture)
-                        {
-                            DoSearch(TERRARIA_WIKI[LanguageManager.Instance.ActiveCulture], itemName);
-                        }
-                        else
-                        {
-                            ActionWithDefaultGameCulture(() =>
-                            {
-                                // We get the item name again to get it in the default game culture
-                                itemName = Main.HoverItem.Name;
-                                DoSearch(TERRARIA_WIKI[DEFAULT_GAME_CULTURE], itemName);
-                            });
-                        }
+                        ShowModMessage("item", itemName, mod);
                     }
-
-                    return true;
                 }
+                else
+                {
+                    DoSearch(TERRARIA_WIKI, ref itemName, () =>
+                    {
+                        itemName = Main.HoverItem.Name;
+                    });
+                }
+
+                return true;
             }
 
             return false;
         }
 
-        private static void DoSearch(string url, string term)
+        /// <summary>
+        /// Searches for the specified term.
+        /// </summary>
+        /// <param name="wiki">The wiki to search from</param>
+        /// <param name="term">The term to search for</param>
+        /// <param name="getTerm">The method to get the term</param>
+        public static void DoSearch(Dictionary<GameCulture, string> wiki, ref string term, Action getTerm)
         {
-            // Checks if Steam overlay option is enabled, if Steam is running and if Steam overlay is enabled
-            if (GetInstance<ClientConfig>().UseSteamOverlay && SteamAPI.IsSteamRunning() && SteamUtils.IsOverlayEnabled())
+            var searchUrl = string.Empty;
+
+            if (GetInstance<ClientConfig>().UseActiveGameCulture && wiki.ContainsKey(LanguageManager.Instance.ActiveCulture))
             {
-                SteamFriends.ActivateGameOverlayToWebPage(url.Replace("%s", term));
+                getTerm();
+                searchUrl = wiki[LanguageManager.Instance.ActiveCulture];
             }
             else
             {
-                Process.Start(url.Replace("%s", term));
+                var oldGameCulture = LanguageManager.Instance.ActiveCulture;
+                LanguageManager.Instance.SetLanguage(DEFAULT_GAME_CULTURE);
+                getTerm();
+                LanguageManager.Instance.SetLanguage(oldGameCulture);
+
+                searchUrl = wiki[DEFAULT_GAME_CULTURE];
+            }
+
+            if (GetInstance<ClientConfig>().UseSteamOverlay && SteamAPI.IsSteamRunning() && SteamUtils.IsOverlayEnabled())
+            {
+                SteamFriends.ActivateGameOverlayToWebPage(searchUrl.Replace("%s", term));
+            }
+            else
+            {
+                Process.Start(searchUrl.Replace("%s", term));
             }
         }
 
-        private static void ShowModMessage(string type, string name, Mod mod)
-        {
-            Main.NewText($"Cannot search for {name}, because it is a modded {type} from {mod.DisplayName}.");
-        }
-
         /// <summary>
-        /// Temporarily changes the game culture to the default game culture to execute an action.
+        /// Display an error message if the mod has not been registered.
         /// </summary>
-        private static void ActionWithDefaultGameCulture(Action action)
+        /// <param name="type">The type of term that was being searched</param>
+        /// <param name="term">The term that was being searched</param>
+        /// <param name="mod">The mod that is not registered</param>
+        private static void ShowModMessage(string type, string term, Mod mod)
         {
-            var oldGameCulture = LanguageManager.Instance.ActiveCulture;
-            LanguageManager.Instance.SetLanguage(DEFAULT_GAME_CULTURE);
-            action();
-            LanguageManager.Instance.SetLanguage(oldGameCulture);
+            Main.NewText($"Cannot search for {term}, because it is a modded {type} from {mod.DisplayName}.");
         }
     }
 }
