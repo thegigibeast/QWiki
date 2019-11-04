@@ -22,7 +22,7 @@ namespace QWiki
                 switch (message)
                 {
                     default:
-                        Logger.Error($"[{DateTime.Now}] {Name} Call Error: Unknown Message: {message}");
+                        Logger.Error($"[{DateTime.Now}] {DisplayName} Call Error: Unknown Message: {message}");
                         break;
                     case "RegisterMod":
                         RegisterMod((Mod)args[1], (string)args[2]);
@@ -34,7 +34,7 @@ namespace QWiki
             }
             catch (Exception e)
             {
-                Logger.Error($"[{DateTime.Now}] {Name} Call Error: {e.StackTrace}{e.Message}");
+                Logger.Error($"[{DateTime.Now}] {DisplayName} Call Error: {e.StackTrace}{e.Message}");
             }
 
             return null;
@@ -106,7 +106,7 @@ namespace QWiki
             // Set default GameCulture search url
             registeredMods[mod][SearchUtils.DEFAULT_GAME_CULTURE] = searchUrl;
 
-            Logger.Info($"[{DateTime.Now}] {Name}: Successfully registered {mod.DisplayName} with default GameCulture ({SearchUtils.DEFAULT_GAME_CULTURE.Name})");
+            Logger.Info($"[{DateTime.Now}] {DisplayName}: Successfully registered {mod.DisplayName} with default GameCulture ({SearchUtils.DEFAULT_GAME_CULTURE.Name})");
         }
 
         /// <summary>
@@ -117,14 +117,14 @@ namespace QWiki
             // Allow creating an entry only if the mod has been registered with the default GameCulture first
             if (!registeredMods.ContainsKey(mod))
             {
-                Logger.Error($"[{DateTime.Now}] {Name} Call Error: {mod.DisplayName} has not been registered with default game culture yet, please call the RegisterMod message first.");
+                Logger.Error($"[{DateTime.Now}] {DisplayName} Call Error: {mod.DisplayName} has not been registered with default game culture yet, please call the RegisterMod message first.");
                 return;
             }
 
             // Register an entry for this GameCulture
             registeredMods[mod][gameCulture] = searchUrl;
 
-            Logger.Info($"[{DateTime.Now}] {Name}: Successfully registered {mod.DisplayName} with specific GameCulture ({gameCulture.Name})");
+            Logger.Info($"[{DateTime.Now}] {DisplayName}: Successfully registered {mod.DisplayName} with specific GameCulture ({gameCulture.Name})");
         }
     }
 }

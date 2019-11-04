@@ -14,5 +14,9 @@ namespace QWiki
         [DefaultValue(true)]
         [Label("Use active game culture")]
         public bool UseActiveGameCulture;
+
+        [DefaultValue(false)]
+        [Label("Show error messages")]
+        public bool ShowErrorMessages;
     }
 }

@@ -1,7 +1,9 @@
-﻿using Steamworks;
+﻿using Microsoft.Xna.Framework;
+using Steamworks;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Text.RegularExpressions;
 using Terraria;
 using Terraria.Localization;
@@ -27,6 +29,12 @@ namespace QWiki
             //{ GameCulture.Spanish, "https://terraria.fandom.com/es/wiki/Especial:Buscar?query=%s" }
         };
 
+        public static HashSet<Item> defaultTileItems = new HashSet<Item>();
+        public static HashSet<Item> defaultWallItems = new HashSet<Item>();
+
+        public static Dictionary<Mod, HashSet<Item>> modTileItems = new Dictionary<Mod, HashSet<Item>>();
+        public static Dictionary<Mod, HashSet<Item>> modWallItems = new Dictionary<Mod, HashSet<Item>>();
+
         /// <summary>
         /// Begins searching for something under the cursor.
         /// </summary>
@@ -34,6 +42,7 @@ namespace QWiki
         {
             if (ItemHover()) return;
             if (NPCHover()) return;
+            if (TileHover()) return;
         }
 
         /// <summary>
@@ -57,7 +66,7 @@ namespace QWiki
                     }
                     else
                     {
-                        ShowModMessage("item", itemName, mod);
+                        ShowErrorMessage("item", Main.HoverItem.Name, mod);
                     }
                 }
                 else
@@ -96,7 +105,7 @@ namespace QWiki
                     }
                     else
                     {
-                        ShowModMessage("NPC", npc.TypeName, mod);
+                        ShowErrorMessage("NPC", npc.TypeName, mod);
                     }
                 }
                 else
@@ -111,6 +120,118 @@ namespace QWiki
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Tries to search for a tile under the cursor.
+        /// </summary>
+        /// <returns>true if a tile has been searched, false otherwise</returns>
+        private static bool TileHover()
+        {
+            Item item = null;
+            var active = false;
+
+            var tile = GetHoveringTile();
+            if (tile != null)
+            {
+                active = tile.active();
+
+                // Search for a tile first
+                if (active)
+                {
+                    item = defaultTileItems.FirstOrDefault(x => x.createTile == tile.type);
+
+                    if (item == null)
+                    {
+                        foreach (var set in modTileItems.Values)
+                        {
+                            item = set.FirstOrDefault(m => m.createTile == tile.type);
+                            if (item != null) break;
+                        }
+                    }
+                }
+                // Search for a liquid second
+                else if (tile.liquid > 0)
+                {
+                    LiquidHover(tile);
+                    return true;
+                }
+                // Search for a wall third
+                else if (tile.wall > 0)
+                {
+                    item = defaultWallItems.FirstOrDefault(i => i.createWall == tile.wall);
+
+                    if (item == null)
+                    {
+                        foreach (var set in modWallItems.Values)
+                        {
+                            item = set.FirstOrDefault(x => x.createWall == tile.wall);
+                            if (item != null) break;
+                        }
+                    }
+                }
+
+                if (item != null)
+                {
+                    var itemName = string.Empty;
+                    if (item.modItem != null)
+                    {
+                        var mod = item.modItem.mod;
+                        if (QWiki.registeredMods.ContainsKey(mod))
+                        {
+                            DoSearch(QWiki.registeredMods[mod], ref itemName, () =>
+                            {
+                                itemName = item.Name;
+                            });
+                        }
+                        else
+                        {
+                            ShowErrorMessage("item", item.Name, item.modItem.mod);
+                        }
+                    }
+                    else
+                    {
+                        DoSearch(TERRARIA_WIKI, ref itemName, () =>
+                        {
+                            itemName = item.Name;
+                        });
+                    }
+                }
+                else if (active || (!active && tile.wall > 0))
+                {
+                    ShowErrorMessage(tile);
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Tries to search for a liquid under the cursor.
+        /// </summary>
+        /// <param name="tile">The liquid tile</param>
+        private static void LiquidHover(Tile tile)
+        {
+            var liquid = tile.liquidType();
+            var tileName = string.Empty;
+
+            DoSearch(TERRARIA_WIKI, ref tileName, () =>
+            {
+                switch (liquid)
+                {
+                    case Tile.Liquid_Water:
+                        tileName = Language.GetTextValue("Mods.QWiki.LiquidName.Water");
+                        break;
+                    case Tile.Liquid_Lava:
+                        tileName = Language.GetTextValue("Mods.QWiki.LiquidName.Lava");
+                        break;
+                    case Tile.Liquid_Honey:
+                        tileName = Language.GetTextValue("Mods.QWiki.LiquidName.Honey");
+                        break;
+                }
+            });
         }
 
         /// <summary>
@@ -166,14 +287,51 @@ namespace QWiki
         }
 
         /// <summary>
+        /// Gets the hovered tile.
+        /// </summary>
+        /// <returns>the tile if one is being hovered, null otherwise</returns>
+        private static Tile GetHoveringTile()
+        {
+            int tileTargetX = (int)((Main.mouseX + Main.screenPosition.X) / 16f);
+            int tileTargetY = (int)((Main.mouseY + Main.screenPosition.Y) / 16f);
+
+            if (Main.LocalPlayer.gravDir == -1f)
+            {
+                tileTargetY = (int)((Main.screenPosition.Y + Main.screenHeight - Main.mouseY) / 16f);
+            }
+
+            var hoverTile = new Vector2(tileTargetX, tileTargetY);
+
+            if ((hoverTile.X > 0) && (hoverTile.Y > 0) && (hoverTile.X < Main.tile.GetLength(0)) &&
+               (hoverTile.Y < Main.tile.GetLength(1)))
+            {
+                // get the tile under the cursor
+                return Main.tile[(int)hoverTile.X, (int)hoverTile.Y];
+            }
+
+            return null;
+        }
+
+        /// <summary>
         /// Display an error message if the mod has not been registered.
         /// </summary>
         /// <param name="type">The type of term that was being searched</param>
         /// <param name="term">The term that was being searched</param>
         /// <param name="mod">The mod that is not registered</param>
-        private static void ShowModMessage(string type, string term, Mod mod)
+        private static void ShowErrorMessage(string type, string term, Mod mod)
         {
-            Main.NewText($"Cannot search for {term}, because it is a modded {type} from {mod.DisplayName}, which has not been registered.");
+            if (GetInstance<ClientConfig>().ShowErrorMessages)
+            {
+                Main.NewText($"{GetInstance<QWiki>().DisplayName}: Cannot search for {term}, because it is a modded {type} from {mod.DisplayName}, which has not been registered.");
+            }
+        }
+
+        private static void ShowErrorMessage(Tile tile)
+        {
+            if (GetInstance<ClientConfig>().ShowErrorMessages)
+            {
+                Main.NewText($"{GetInstance<QWiki>().DisplayName}: Cannot search for this tile (ID: {(tile.active() ? tile.type : tile.wall)}) because no item can place it.");
+            }
         }
     }
 }
