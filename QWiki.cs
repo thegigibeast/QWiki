@@ -48,11 +48,53 @@ namespace QWiki
 
         public override void PostSetupContent()
         {
+            #region Antiaris
+            var antiaris = ModLoader.GetMod("Antiaris");
+            if (antiaris != null)
+            {
+                RegisterMod(antiaris, "https://antiaris.gamepedia.com/index.php?search=%s");
+            }
+            #endregion
             #region CalamityMod
             var calamityMod = ModLoader.GetMod("CalamityMod");
             if (calamityMod != null)
             {
                 RegisterMod(calamityMod, "https://calamitymod.gamepedia.com/index.php?search=%s");
+            }
+            #endregion
+            #region DBZMOD
+            var dbzmod = ModLoader.GetMod("DBZMOD");
+            if (dbzmod != null)
+            {
+                RegisterMod(dbzmod, "https://dbtmod.gamepedia.com/index.php?search=%s");
+            }
+            #endregion
+            #region ElementsAwoken
+            var elementsAwoken = ModLoader.GetMod("ElementsAwoken");
+            if (elementsAwoken != null)
+            {
+                RegisterMod(elementsAwoken, "https://elementsawoken.gamepedia.com/index.php?search=%s");
+            }
+            #endregion
+            #region Exodus
+            var exodus = ModLoader.GetMod("Exodus");
+            if (exodus != null)
+            {
+                RegisterMod(exodus, "https://exodusmod.gamepedia.com/index.php?search=%s");
+            }
+            #endregion
+            #region GRealm
+            var gRealm = ModLoader.GetMod("GRealm");
+            if (gRealm != null)
+            {
+                RegisterMod(gRealm, "https://grealm.gamepedia.com/index.php?search=%s");
+            }
+            #endregion
+            #region Laugicality
+            var laugicality = ModLoader.GetMod("Laugicality");
+            if (laugicality != null)
+            {
+                RegisterMod(laugicality, "https://enigmamod.gamepedia.com/index.php?search=%s");
             }
             #endregion
             #region SacredTools
@@ -67,6 +109,13 @@ namespace QWiki
             if (spiritMod != null)
             {
                 RegisterMod(spiritMod, "https://spiritmod.gamepedia.com/index.php?search=%s");
+            }
+            #endregion
+            #region Split
+            var split = ModLoader.GetMod("Split");
+            if (split != null)
+            {
+                RegisterMod(split, "https://splitmod.gamepedia.com/index.php?search=%s");
             }
             #endregion
             #region ThoriumMod

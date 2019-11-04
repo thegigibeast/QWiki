@@ -1,1 +1,5 @@
-QWiki is a pretty cool mod, it does...this. Modify this file with a description of your mod.
+﻿Based on DrEinsteinium's tWiki mod and on abluescarab's WikiSearch mod, QWiki is a tModLoader mod that allows you to search the Terraria Wiki for whatever is under the mouse cursor.
+
+* Configuration options available.
+* Press Q to search the wiki while hovering over any item, NPC, or tile (including liquids and walls).
+* Now has mod support! Included mods: Antiaris, Calamity, Dragon Ball Terraria, Elements Awoken, Exodus, GRealm, Enigma, Shadows of Abaddon, Spirit, Split and Thorium.
