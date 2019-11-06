@@ -54,9 +54,8 @@ namespace QWiki
             if (!string.IsNullOrWhiteSpace(Main.HoverItem.Name))
             {
                 var itemName = string.Empty;
-                if (Main.HoverItem.modItem != null)
+                if (IsModItem(Main.HoverItem, out var mod))
                 {
-                    var mod = Main.HoverItem.modItem.mod;
                     if (QWiki.registeredMods.ContainsKey(mod))
                     {
                         DoSearch(QWiki.registeredMods[mod], ref itemName, () =>
@@ -93,9 +92,8 @@ namespace QWiki
             if (npc != null)
             {
                 var npcName = string.Empty;
-                if (npc.modNPC != null)
+                if (IsModNPC(npc, out var mod))
                 {
-                    var mod = npc.modNPC.mod;
                     if (QWiki.registeredMods.ContainsKey(mod))
                     {
                         DoSearch(QWiki.registeredMods[mod], ref npcName, () =>
@@ -174,9 +172,8 @@ namespace QWiki
                 if (item != null)
                 {
                     var itemName = string.Empty;
-                    if (item.modItem != null)
+                    if (IsModItem(item, out var mod))
                     {
-                        var mod = item.modItem.mod;
                         if (QWiki.registeredMods.ContainsKey(mod))
                         {
                             DoSearch(QWiki.registeredMods[mod], ref itemName, () =>
@@ -332,6 +329,32 @@ namespace QWiki
             {
                 Main.NewText($"{GetInstance<QWiki>().DisplayName}: Cannot search for this tile (ID: {(tile.active() ? tile.type : tile.wall)}) because no item can place it.");
             }
+        }
+
+        private static bool IsModItem(Item item, out Mod mod)
+        {
+            mod = null;
+
+            if (item.modItem != null)
+            {
+                mod = item.modItem.mod;
+                return true;
+            }
+
+            return false;
+        }
+
+        private static bool IsModNPC(NPC npc, out Mod mod)
+        {
+            mod = null;
+
+            if (npc.modNPC != null)
+            {
+                mod = npc.modNPC.mod;
+                return true;
+            }
+
+            return false;
         }
     }
 }
