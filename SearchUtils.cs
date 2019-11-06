@@ -51,28 +51,29 @@ namespace QWiki
         /// <returns>true if an item has been searched, false otherwise</returns>
         private static bool ItemHover()
         {
-            if (!string.IsNullOrWhiteSpace(Main.HoverItem.Name))
+            var item = GetHoveringItem();
+            if (item != null)
             {
                 var itemName = string.Empty;
-                if (IsModItem(Main.HoverItem, out var mod))
+                if (IsModItem(item, out var mod))
                 {
                     if (QWiki.registeredMods.ContainsKey(mod))
                     {
                         DoSearch(QWiki.registeredMods[mod], ref itemName, () =>
                         {
-                            itemName = Regex.Replace(Main.HoverItem.Name, @"\[.+\]", "").Trim();
+                            itemName = Regex.Replace(item.Name, @"\[.+\]", "").Trim();
                         });
                     }
                     else
                     {
-                        ShowErrorMessage("item", Main.HoverItem.Name, mod);
+                        ShowErrorMessage("item", item.Name, mod);
                     }
                 }
                 else
                 {
                     DoSearch(TERRARIA_WIKI, ref itemName, () =>
                     {
-                        itemName = Main.HoverItem.Name;
+                        itemName = item.Name;
                     });
                 }
 
@@ -267,6 +268,30 @@ namespace QWiki
         }
 
         /// <summary>
+        /// Gets the hovered item.
+        /// </summary>
+        /// <returns>the item if one is being hovered, null otherwise</returns>
+        private static Item GetHoveringItem()
+        {
+            // Item in inventory
+            if (!string.IsNullOrWhiteSpace(Main.HoverItem.Name))
+            {
+                return Main.HoverItem;
+            }
+
+            // Item in world
+            for (var i = 0; i < Main.item.Length; i++)
+            {
+                if (Main.item[i].Hitbox.Contains((int)Main.MouseWorld.X, (int)Main.MouseWorld.Y))
+                {
+                    return Main.item[i];
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
         /// Gets the hovered NPC.
         /// </summary>
         /// <returns>the NPC if one is being hovered, null otherwise</returns>
@@ -331,7 +356,7 @@ namespace QWiki
             }
         }
 
-        private static bool IsModItem(Item item, out Mod mod)
+        public static bool IsModItem(Item item, out Mod mod)
         {
             mod = null;
 
